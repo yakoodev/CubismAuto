@@ -8,11 +8,11 @@
 - [x] Проверить, что TEMP-снимок быстрый и без лишнего мусора.
 
 ## T4. ProcessFinder: резолв реального PID
-- [ ] После запуска launcher ждать до N секунд кандидата процесса (например 15 сек).
-- [ ] Кандидаты: `javaw`, `java`, `CubismEditor5`.
-- [ ] Фильтр по времени старта (не раньше launcher).
-- [ ] Добавить best-effort scoring по title/module path.
-- [ ] Не падать при запрете доступа к `MainModule`.
+- [x] После запуска launcher ждать до N секунд кандидата процесса (например 15 сек).
+- [x] Кандидаты: `javaw`, `java`, `CubismEditor5`.
+- [x] Фильтр по времени старта (не раньше launcher).
+- [x] Добавить best-effort scoring по title/module path.
+- [x] Не падать при запрете доступа к `MainModule`.
 
 ## T5. ProcessInspector: never-crash
 - [ ] Если PID умер или доступ запрещен, возвращать структуру с пустыми модулями.

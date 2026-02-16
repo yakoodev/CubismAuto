@@ -4,6 +4,8 @@ namespace CubismAuto.Core.Process;
 
 public static class ProcessFinder
 {
+    private sealed record Candidate(int Pid, int Score, DateTimeOffset StartTimeUtc);
+
     /// <summary>
     /// CubismEditor5.exe может быть "лаунчером": быстро завершиться и поднять реальный процесс (часто javaw.exe).
     /// Эта функция пытается найти "настоящий" процесс редактора, стартовавший рядом по времени.
@@ -11,36 +13,46 @@ public static class ProcessFinder
     public static int ResolveCubismPid(int initialPid, DateTimeOffset launchTimeUtc, string expectedExePath, TimeSpan timeout)
     {
         var deadline = DateTimeOffset.UtcNow + timeout;
+        Candidate? bestSeen = null;
 
-        // Сначала попробуем жить с initialPid
-        if (IsRunning(initialPid))
-            return initialPid;
-
-        // Потом ищем "свежие" процессы, которые похожи на Cubism
+        // Ждем до timeout и пытаемся найти лучший кандидат.
         while (DateTimeOffset.UtcNow < deadline)
         {
             var candidate = FindCandidate(launchTimeUtc, expectedExePath);
             if (candidate != null)
-                return candidate.Value;
+            {
+                if (bestSeen is null || IsBetter(candidate, bestSeen))
+                    bestSeen = candidate;
+
+                // Достаточно уверенный матч - можно вернуть раньше timeout.
+                if (candidate.Score >= 70)
+                    return candidate.Pid;
+            }
 
             Thread.Sleep(250);
         }
 
-        // Фолбэк: если initialPid вдруг появился (маловероятно)
+        if (bestSeen != null)
+            return bestSeen.Pid;
+
+        // Фолбэк: если initialPid все еще жив.
+        if (IsRunning(initialPid))
+            return initialPid;
+
+        // Последний фолбэк: отдаем исходный pid, чтобы не ломать сценарий.
         return initialPid;
     }
 
-    private static int? FindCandidate(DateTimeOffset launchTimeUtc, string expectedExePath)
+    private static Candidate? FindCandidate(DateTimeOffset launchTimeUtc, string expectedExePath)
     {
-        var min = launchTimeUtc.AddSeconds(-2);
+        var min = launchTimeUtc;
         var max = DateTimeOffset.UtcNow.AddSeconds(2);
 
         System.Diagnostics.Process[] procs;
         try { procs = System.Diagnostics.Process.GetProcesses(); }
         catch { return null; }
 
-        int? bestPid = null;
-        DateTimeOffset bestStart = DateTimeOffset.MinValue;
+        Candidate? best = null;
 
         foreach (var p in procs)
         {
@@ -56,15 +68,10 @@ public static class ProcessFinder
                 if (stUtc < min || stUtc > max)
                     continue;
 
-                // Пытаемся убедиться, что это реально Cubism
-                if (!LooksLikeCubismByWindowTitle(p) && !LooksLikeCubismByMainModule(p, expectedExePath))
-                    continue;
-
-                if (stUtc > bestStart)
-                {
-                    bestStart = stUtc;
-                    bestPid = p.Id;
-                }
+                var score = ScoreCandidate(p, name, expectedExePath);
+                var candidate = new Candidate(p.Id, score, stUtc);
+                if (score > 0 && (best is null || IsBetter(candidate, best)))
+                    best = candidate;
             }
             catch
             {
@@ -76,7 +83,15 @@ public static class ProcessFinder
             }
         }
 
-        return bestPid;
+        return best;
+    }
+
+    private static bool IsBetter(Candidate left, Candidate right)
+    {
+        if (left.Score != right.Score)
+            return left.Score > right.Score;
+
+        return left.StartTimeUtc > right.StartTimeUtc;
     }
 
     private static bool LooksLikeCubismProcessName(string processName)
@@ -86,6 +101,25 @@ public static class ProcessFinder
             || processName.Equals("CubismEditor5_d3d", StringComparison.OrdinalIgnoreCase)
             || processName.Equals("javaw", StringComparison.OrdinalIgnoreCase)
             || processName.Equals("java", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int ScoreCandidate(System.Diagnostics.Process p, string processName, string expectedExePath)
+    {
+        var score = 0;
+
+        if (processName.Equals("CubismEditor5", StringComparison.OrdinalIgnoreCase)
+            || processName.Equals("CubismEditor5_d3d", StringComparison.OrdinalIgnoreCase))
+            score += 25;
+        else if (processName.Equals("javaw", StringComparison.OrdinalIgnoreCase)
+                 || processName.Equals("java", StringComparison.OrdinalIgnoreCase))
+            score += 10;
+
+        if (LooksLikeCubismByWindowTitle(p))
+            score += 30;
+
+        score += ScoreMainModulePath(p, expectedExePath);
+
+        return score;
     }
 
     private static bool LooksLikeCubismByWindowTitle(System.Diagnostics.Process p)
@@ -100,25 +134,33 @@ public static class ProcessFinder
         catch { return false; }
     }
 
-    private static bool LooksLikeCubismByMainModule(System.Diagnostics.Process p, string expectedExePath)
+    private static int ScoreMainModulePath(System.Diagnostics.Process p, string expectedExePath)
     {
         try
         {
             var mm = p.MainModule?.FileName;
-            if (string.IsNullOrWhiteSpace(mm)) return false;
+            if (string.IsNullOrWhiteSpace(mm)) return 0;
 
             // Реальный процесс может быть javaw.exe, но иногда main module всё-таки CubismEditor5.exe.
             if (Path.GetFullPath(mm).Equals(Path.GetFullPath(expectedExePath), StringComparison.OrdinalIgnoreCase))
-                return true;
+                return 50;
 
             // javaw/java тоже ок, если он из папки Cubism (часто так)
             var expectedDir = Path.GetDirectoryName(Path.GetFullPath(expectedExePath))!;
             var mmDir = Path.GetDirectoryName(Path.GetFullPath(mm))!;
-            return mmDir.StartsWith(expectedDir, StringComparison.OrdinalIgnoreCase);
+            if (mmDir.StartsWith(expectedDir, StringComparison.OrdinalIgnoreCase))
+                return 35;
+
+            if (mm.Contains("live2d", StringComparison.OrdinalIgnoreCase)
+                || mm.Contains("cubism", StringComparison.OrdinalIgnoreCase))
+                return 20;
+
+            return 0;
         }
         catch
         {
-            return false;
+            // Нет прав на MainModule/32-64-bit mismatch и т.п.
+            return 0;
         }
     }
 

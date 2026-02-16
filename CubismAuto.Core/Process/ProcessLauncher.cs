@@ -27,6 +27,7 @@ public static class ProcessLauncher
             WorkingDirectory = string.IsNullOrWhiteSpace(workingDirectory) ? "" : workingDirectory!
         };
 
+        var launchTimeUtc = DateTimeOffset.UtcNow;
         var p = System.Diagnostics.Process.Start(psi)
                 ?? throw new InvalidOperationException($"Не удалось запустить процесс: {exePath}");
 
@@ -37,7 +38,7 @@ public static class ProcessLauncher
             Pid: p.Id,
             ExePath: exePath,
             Arguments: psi.Arguments,
-            StartTimeUtc: DateTimeOffset.UtcNow
+            StartTimeUtc: launchTimeUtc
         );
     }
 
