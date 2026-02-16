@@ -31,7 +31,8 @@ dotnet run --project .\CubismAuto.Cli -- --stop
 ```powershell
 dotnet run --project .\CubismAuto.Cli -- ^
   --exe "C:\Program Files\Live2D Cubism 5.3\CubismEditor5.exe" ^
-  --projects "C:\Users\Yakoo\source\repos\CubismAuto\_projects" ^
+  --projects ".\_projects" ^
+  --cmo3 "C:\Users\Yakoo\Downloads\vt\hibiki\hibiki_t01.cmo3" ^
   --stop
 ```
 

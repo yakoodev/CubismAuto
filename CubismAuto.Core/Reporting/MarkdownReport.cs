@@ -43,7 +43,7 @@ public static class MarkdownReport
                     sb.AppendLine("| Kind | Path | Before | After |");
                     sb.AppendLine("|---|---|---|---|");
                     foreach (var i in diff.Items.OrderBy(x => x.Kind).ThenBy(x => x.Path))
-                        sb.AppendLine($"| {Esc(i.Kind)} | {Esc(i.Path)} | {Esc(i.Before)} | {Esc(i.After)} |");
+                        sb.AppendLine($"| {Escape(i.Kind)} | {Escape(i.Path)} | {Escape(i.Before)} | {Escape(i.After)} |");
                     sb.AppendLine();
                 }
                 else
@@ -96,6 +96,6 @@ public static class MarkdownReport
         return sb.ToString();
     }
 
-    private static string Esc(string? s)
+    private static string Escape(string? s)
         => (s ?? "").Replace("|", "\\|").Replace("\n", "<br/>");
 }
