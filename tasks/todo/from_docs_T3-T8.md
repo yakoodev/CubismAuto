@@ -19,9 +19,9 @@
 - [x] Не допускать `Unhandled exception`.
 
 ## T6. Multiple roots: снапшоты и diff по каждому root
-- [ ] `snapshot_before_{i}.json`, `snapshot_after_{i}.json`, `snapshot_diff_{i}.json`.
-- [ ] В `report.md` отдельные секции по каждому root.
-- [ ] В секциях: root path, before/after timestamps, кол-во изменений, таблица изменений.
+- [x] `snapshot_before_{i}.json`, `snapshot_after_{i}.json`, `snapshot_diff_{i}.json`.
+- [x] В `report.md` отдельные секции по каждому root.
+- [x] В секциях: root path, before/after timestamps, кол-во изменений, таблица изменений.
 
 ## T7. Recent artifacts
 - [ ] Запоминать `sessionStartUtc` до запуска Cubism.
