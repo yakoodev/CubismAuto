@@ -7,8 +7,6 @@
 - сохраняет `report.md` и JSON-артефакты,
 - собирает best-effort информацию о процессе Cubism.
 
-Проект не делает UI automation и не использует reverse engineering.
-
 ## Структура
 - `CubismAuto.Cli/Program.cs` — orchestration сценария CLI.
 - `CubismAuto.Core/Snapshots/*` — snapshot, diff, recent scan, writer.
@@ -49,4 +47,3 @@ dotnet run --project .\CubismAuto.Cli -- --stop
 - Детальные, но компактные артефакты (`snapshot_*.json`, `process_modules.json`, `report.md`).
 - Понятные WARN-логи с путем, без остановки сценария.
 - Воспроизводимость запуска (дефолты и аргументы должны быть прозрачны в выводе CLI).
-
