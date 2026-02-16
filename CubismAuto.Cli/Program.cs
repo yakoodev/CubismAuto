@@ -52,10 +52,10 @@ static void PrintHelp()
     Console.WriteLine("  dotnet run --project CubismAuto.Cli -- [options]");
     Console.WriteLine();
     Console.WriteLine("Options:");
-    Console.WriteLine("  --exe <path>         Path to CubismEditor5.exe");
+    Console.WriteLine(@"  --exe <path>         Path to CubismEditor5.exe (default: C:\Program Files\Live2D Cubism 5.3\CubismEditor5.exe)");
     Console.WriteLine("  --projects <path>    Root folder with test projects (you create them manually)");
     Console.WriteLine("  --path <path>        Additional snapshot root (repeatable)");
-    Console.WriteLine("  --cmo3 <file>        Path to a .cmo3 project file you open (its folder will be snapshotted)");
+    Console.WriteLine(@"  --cmo3 <file>        Path to a .cmo3 project file (default: C:\Users\Yakoo\Downloads\vt\hibiki\hibiki_t01.cmo3)");
     Console.WriteLine("  --paths <a;b;c>      Additional snapshot roots (semicolon-separated)");
     Console.WriteLine("  --artifacts <path>   Where to store artifacts (default: ./artifacts/<timestamp>)");
     Console.WriteLine("  --wait               Wait for Enter between snapshots (default: true)");
@@ -79,6 +79,7 @@ if (Has(cliArgs, "--help") || Has(cliArgs, "-h"))
 // defaults as requested
 var defaultExe = @"C:\Program Files\Live2D Cubism 5.3\CubismEditor5.exe";
 var defaultProjects = @"./_projects";
+var defaultCmo3 = @"C:\Users\Yakoo\Downloads\vt\hibiki\hibiki_t01.cmo3";
 
 var cubismExe = Arg(cliArgs, "--exe", defaultExe);
 var projectsRoot = Arg(cliArgs, "--projects", defaultProjects);
@@ -92,7 +93,7 @@ if (!string.IsNullOrWhiteSpace(pathsInline))
 {
     extraRoots.AddRange(pathsInline.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 }
-var cmo3File = Arg(cliArgs, "--cmo3", "");
+var cmo3File = Arg(cliArgs, "--cmo3", defaultCmo3);
 string? cmo3Dir = null;
 if (!string.IsNullOrWhiteSpace(cmo3File))
 {
@@ -126,6 +127,7 @@ if (Has(cliArgs, "--wait")) wait = true;
 Console.WriteLine("=== CubismAuto CLI ===");
 Console.WriteLine($"Exe:        {cubismExe}");
 Console.WriteLine($"Projects:   {projectsRoot}");
+Console.WriteLine($"Cmo3:       {cmo3File}");
 Console.WriteLine($"Artifacts:  {artifactsRoot}");
 if (extraRoots.Count > 0)
     Console.WriteLine($"ExtraRoots: {string.Join(" | ", extraRoots)}");
