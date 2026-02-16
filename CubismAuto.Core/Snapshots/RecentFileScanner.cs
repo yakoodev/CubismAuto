@@ -17,6 +17,7 @@ public static class RecentFileScanner
     public static IReadOnlyList<RecentFileHit> Find(
         string rootPath,
         DateTimeOffset modifiedAfterUtc,
+        DateTimeOffset? modifiedBeforeUtc,
         string[] patterns,
         int maxHits = 200,
         int maxDepth = 12,
@@ -27,6 +28,8 @@ public static class RecentFileScanner
         shouldSkipDir ??= _ => false;
 
         var root = Path.GetFullPath(rootPath);
+        if (!Directory.Exists(root))
+            return Array.Empty<RecentFileHit>();
 
         void Walk(string dir, int depth)
         {
@@ -73,8 +76,10 @@ public static class RecentFileScanner
                         try
                         {
                             var fi = new FileInfo(f);
-                            var lw = DateTimeOffset.FromFileTime(fi.LastWriteTimeUtc.ToFileTimeUtc());
-                            if (fi.LastWriteTimeUtc <= modifiedAfterUtc.UtcDateTime) continue;
+                            if (fi.LastWriteTimeUtc <= modifiedAfterUtc.UtcDateTime)
+                                continue;
+                            if (modifiedBeforeUtc.HasValue && fi.LastWriteTimeUtc > modifiedBeforeUtc.Value.UtcDateTime)
+                                continue;
 
                             hits.Add(new RecentFileHit(fi.FullName, fi.Length, fi.LastWriteTimeUtc));
                         }

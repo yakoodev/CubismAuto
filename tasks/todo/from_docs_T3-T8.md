@@ -24,11 +24,11 @@
 - [x] В секциях: root path, before/after timestamps, кол-во изменений, таблица изменений.
 
 ## T7. Recent artifacts
-- [ ] Запоминать `sessionStartUtc` до запуска Cubism.
-- [ ] После Enter сканировать: папку `--cmo3`, `%APPDATA%\\Live2D`, `%LOCALAPPDATA%\\Live2D`, опц. `Downloads`.
-- [ ] Фильтр времени: `[sessionStartUtc - 30s, now]`.
-- [ ] Паттерны: `.moc3`, `.cmo3`, `model3.json`, `physics3.json`, `motion3.json`, `exp3.json`, `pose3.json`, `userdata3.json`, `.png`, опц. `.atlas`.
-- [ ] Добавить в `report.md` секцию `Recent artifacts (best effort)` с таблицей `Path | Size | LastWrite(UTC)`.
+- [x] Запоминать `sessionStartUtc` до запуска Cubism.
+- [x] После Enter сканировать: папку `--cmo3`, `%APPDATA%\\Live2D`, `%LOCALAPPDATA%\\Live2D`, опц. `Downloads`.
+- [x] Фильтр времени: `[sessionStartUtc - 30s, now]`.
+- [x] Паттерны: `.moc3`, `.cmo3`, `model3.json`, `physics3.json`, `motion3.json`, `exp3.json`, `pose3.json`, `userdata3.json`, `.png`, опц. `.atlas`.
+- [x] Добавить в `report.md` секцию `Recent artifacts (best effort)` с таблицей `Path | Size | LastWrite(UTC)`.
 
 ## T8. Полировка логов и UX
 - [ ] Логировать, какие roots реально снапшотятся.

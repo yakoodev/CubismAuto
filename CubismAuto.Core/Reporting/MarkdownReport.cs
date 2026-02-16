@@ -60,11 +60,11 @@ public static class MarkdownReport
             sb.AppendLine("## Recent artifacts (best effort)");
             sb.AppendLine("Файлы, изменённые после старта сценария. Ищи тут `*.moc3`, `model3.json`, `physics3.json`, `motion3.json` и текстуры.");
             sb.AppendLine();
-            sb.AppendLine("| LastWrite(UTC) | Size | Path |");
+            sb.AppendLine("| Path | Size | LastWrite(UTC) |");
             sb.AppendLine("|---|---:|---|");
             foreach (var h in recentHits)
             {
-                sb.AppendLine($"| {h.LastWriteTimeUtc:O} | {h.Size} | {Escape(h.Path)} |");
+                sb.AppendLine($"| {Escape(h.Path)} | {h.Size} | {h.LastWriteTimeUtc:O} |");
             }
             sb.AppendLine();
         }
@@ -74,11 +74,11 @@ public static class MarkdownReport
             sb.AppendLine("## Recent artifacts (best effort)");
             sb.AppendLine("Файлы, изменённые после старта сценария. Ищи тут `*.moc3`, `model3.json`, `physics3.json`, `motion3.json` и текстуры.");
             sb.AppendLine();
-            sb.AppendLine("| LastWrite(UTC) | Size | Path |");
+            sb.AppendLine("| Path | Size | LastWrite(UTC) |");
             sb.AppendLine("|---|---:|---|");
             foreach (var h in recentHits)
             {
-                sb.AppendLine($"| {h.LastWriteTimeUtc:O} | {h.Size} | {Escape(h.Path)} |");
+                sb.AppendLine($"| {Escape(h.Path)} | {h.Size} | {h.LastWriteTimeUtc:O} |");
             }
             sb.AppendLine();
         }

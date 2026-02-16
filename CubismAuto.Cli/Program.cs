@@ -180,7 +180,6 @@ roots = roots
     .Where(Directory.Exists)
     .ToList();
 
-var scenarioStartUtc = DateTimeOffset.UtcNow;
 Console.WriteLine("Taking BEFORE snapshots...");
 var beforeSnapshots = new List<DirectorySnapshot>();
 for (int i = 0; i < roots.Count; i++)
@@ -199,6 +198,7 @@ for (int i = 0; i < roots.Count; i++)
     SnapshotWriter.WriteSnapshot(Path.Combine(artifactsRoot, $"snapshot_before_{i+1}.json"), snap);
 }
 
+var sessionStartUtc = DateTimeOffset.UtcNow;
 Console.WriteLine("Launching Cubism Editor...");
 LaunchedProcess launched;
 try
@@ -270,27 +270,59 @@ for (int i = 0; i < roots.Count; i++)
 IReadOnlyList<RecentFileHit>? recentHits = null;
 try
 {
-    var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-    bool SkipDir(string d)
+    var recentAfterUtc = sessionStartUtc.AddSeconds(-30);
+    var recentBeforeUtc = DateTimeOffset.UtcNow;
+    var downloads = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+
+    var scanRoots = new List<string>();
+    if (!string.IsNullOrWhiteSpace(cmo3Dir)) scanRoots.Add(cmo3Dir);
+    scanRoots.Add(Path.Combine(appData, "Live2D"));
+    scanRoots.Add(Path.Combine(localAppData, "Live2D"));
+    if (Directory.Exists(downloads)) scanRoots.Add(downloads);
+
+    scanRoots = scanRoots
+        .Select(Path.GetFullPath)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Where(Directory.Exists)
+        .ToList();
+
+    var patterns = new[]
     {
-        var p = d.ToLowerInvariant();
-        return p.Contains(@"\.git") ||
-               p.Contains(@"\node_modules") ||
-               p.Contains(@"\artifacts") ||
-               p.Contains(@"\appdata\local\packages") ||
-               p.Contains(@"\appdata\local\temp") ||
-               p.Contains(@"\windows") ||
-               p.Contains(@"\program files");
+        "*.moc3",
+        "*.cmo3",
+        "*model3.json",
+        "*physics3.json",
+        "*motion3.json",
+        "*exp3.json",
+        "*pose3.json",
+        "*userdata3.json",
+        "*.png",
+        "*.atlas"
+    };
+
+    var merged = new Dictionary<string, RecentFileHit>(StringComparer.OrdinalIgnoreCase);
+    foreach (var root in scanRoots)
+    {
+        var hits = RecentFileScanner.Find(
+            rootPath: root,
+            modifiedAfterUtc: recentAfterUtc,
+            modifiedBeforeUtc: recentBeforeUtc,
+            patterns: patterns,
+            maxHits: 200,
+            maxDepth: 12,
+            shouldSkipDir: null);
+
+        foreach (var hit in hits)
+        {
+            merged[hit.Path] = hit;
+        }
     }
 
-    recentHits = RecentFileScanner.Find(
-        rootPath: userProfile,
-        modifiedAfterUtc: scenarioStartUtc,
-        patterns: new[] { "*.moc3", "model3.json", "physics3.json", "motion3.json", "*.cmo3", "*.png" },
-        maxHits: 200,
-        maxDepth: 14,
-        shouldSkipDir: SkipDir
-    );
+    recentHits = merged.Values
+        .OrderByDescending(h => h.LastWriteTimeUtc)
+        .ThenBy(h => h.Path, StringComparer.OrdinalIgnoreCase)
+        .Take(200)
+        .ToList();
 }
 catch
 {
