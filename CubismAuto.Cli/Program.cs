@@ -78,7 +78,7 @@ if (Has(cliArgs, "--help") || Has(cliArgs, "-h"))
 
 // defaults as requested
 var defaultExe = @"C:\Program Files\Live2D Cubism 5.3\CubismEditor5.exe";
-var defaultProjects = @"C:\Users\Yakoo\source\repos\CubismAuto\_projects";
+var defaultProjects = @"./_projects";
 
 var cubismExe = Arg(cliArgs, "--exe", defaultExe);
 var projectsRoot = Arg(cliArgs, "--projects", defaultProjects);
