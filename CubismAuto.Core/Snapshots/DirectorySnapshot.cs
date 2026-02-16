@@ -92,6 +92,10 @@ public static class DirectorySnapshotter
                 {
                     // Skip unreadable files.
                 }
+                catch (DirectoryNotFoundException)
+                {
+                    // File disappeared during traversal.
+                }
                 catch (IOException)
                 {
                     // Skip locked/temporary files.
