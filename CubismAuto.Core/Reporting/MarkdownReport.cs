@@ -9,6 +9,11 @@ public static class MarkdownReport
     public static string Build(ProcessInfo pinfo, IReadOnlyList<SnapshotDiff> diffs, IReadOnlyList<RecentFileHit>? recentHits = null, string? extraNotes = null)
     {
         var sb = new StringBuilder();
+        var changedDiffs = diffs
+            .Where(d => d.Items.Count > 0)
+            .OrderBy(d => d.RootPath, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var recentCount = recentHits?.Count ?? 0;
 
         sb.AppendLine("# CubismAuto report");
         sb.AppendLine();
@@ -19,6 +24,13 @@ public static class MarkdownReport
         sb.AppendLine($"- MainModule: `{pinfo.MainModuleFileName ?? "N/A"}`");
         sb.AppendLine($"- StartTime(UTC): `{(pinfo.StartTimeUtc.HasValue ? pinfo.StartTimeUtc.Value.ToString("O") : "N/A")}`");
         sb.AppendLine($"- Modules: `{pinfo.Modules.Count}`");
+        sb.AppendLine();
+
+        sb.AppendLine("## Summary");
+        sb.AppendLine($"- Changed roots: `{changedDiffs.Count}`");
+        foreach (var d in changedDiffs)
+            sb.AppendLine($"- Changes in: `{d.RootPath}` (`{d.Items.Count}`)");
+        sb.AppendLine($"- Recent artifacts found: `{recentCount}`");
         sb.AppendLine();
 
         sb.AppendLine("## Snapshot diffs");
@@ -54,7 +66,6 @@ public static class MarkdownReport
             }
         }
 
-
         if (recentHits is { Count: > 0 })
         {
             sb.AppendLine("## Recent artifacts (best effort)");
@@ -69,19 +80,6 @@ public static class MarkdownReport
             sb.AppendLine();
         }
         sb.AppendLine();
-        if (recentHits is { Count: > 0 })
-        {
-            sb.AppendLine("## Recent artifacts (best effort)");
-            sb.AppendLine("Файлы, изменённые после старта сценария. Ищи тут `*.moc3`, `model3.json`, `physics3.json`, `motion3.json` и текстуры.");
-            sb.AppendLine();
-            sb.AppendLine("| Path | Size | LastWrite(UTC) |");
-            sb.AppendLine("|---|---:|---|");
-            foreach (var h in recentHits)
-            {
-                sb.AppendLine($"| {Escape(h.Path)} | {h.Size} | {h.LastWriteTimeUtc:O} |");
-            }
-            sb.AppendLine();
-        }
 
         sb.AppendLine("## Notes");
         sb.AppendLine("- Это стенд наблюдаемости: что меняется на диске и что грузится в процесс.");

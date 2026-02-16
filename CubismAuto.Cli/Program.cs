@@ -155,6 +155,26 @@ bool IsCubismTempPath(string path)
     => path.Contains("live2d", StringComparison.OrdinalIgnoreCase)
        || path.Contains("cubism", StringComparison.OrdinalIgnoreCase);
 
+var warnSeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+const int warnLimit = 120;
+var warnCount = 0;
+
+void Warn(string message)
+{
+    if (!warnSeen.Add(message))
+        return;
+
+    warnCount++;
+    if (warnCount <= warnLimit)
+    {
+        Console.WriteLine($"[WARN] {message}");
+        return;
+    }
+
+    if (warnCount == warnLimit + 1)
+        Console.WriteLine($"[WARN] too many warnings, suppressing the rest (>{warnLimit})");
+}
+
 // snapshot roots: projectsRoot + some sensible defaults (AppData) + user extras
 var roots = new List<string>();
 roots.Add(projectsRoot);
@@ -180,6 +200,18 @@ roots = roots
     .Where(Directory.Exists)
     .ToList();
 
+Console.WriteLine("Snapshot roots (resolved):");
+if (roots.Count == 0)
+{
+    Console.WriteLine("  (none)");
+}
+else
+{
+    for (int i = 0; i < roots.Count; i++)
+        Console.WriteLine($"  [{i + 1}] {roots[i]}");
+}
+Console.WriteLine();
+
 Console.WriteLine("Taking BEFORE snapshots...");
 var beforeSnapshots = new List<DirectorySnapshot>();
 for (int i = 0; i < roots.Count; i++)
@@ -193,7 +225,7 @@ for (int i = 0; i < roots.Count; i++)
         filter = p => IncludeFile(p) && IsCubismTempPath(p);
     }
 
-    var snap = DirectorySnapshotter.Take(root, filter);
+    var snap = DirectorySnapshotter.Take(root, filter, warn: Warn);
     beforeSnapshots.Add(snap);
     SnapshotWriter.WriteSnapshot(Path.Combine(artifactsRoot, $"snapshot_before_{i+1}.json"), snap);
 }
@@ -252,7 +284,7 @@ for (int i = 0; i < roots.Count; i++)
         filter = p => IncludeFile(p) && IsCubismTempPath(p);
     }
 
-    var snap = DirectorySnapshotter.Take(root, filter);
+    var snap = DirectorySnapshotter.Take(root, filter, warn: Warn);
     afterSnapshots.Add(snap);
     SnapshotWriter.WriteSnapshot(Path.Combine(artifactsRoot, $"snapshot_after_{i+1}.json"), snap);
 }
@@ -324,8 +356,9 @@ try
         .Take(200)
         .ToList();
 }
-catch
+catch (Exception ex)
 {
+    Warn($"recent artifacts scan failed (best effort): {ex.Message}");
     recentHits = null;
 }
 

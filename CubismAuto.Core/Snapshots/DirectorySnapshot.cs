@@ -17,7 +17,7 @@ public sealed record DirectorySnapshot(
 
 public static class DirectorySnapshotter
 {
-    public static DirectorySnapshot Take(string rootPath, Func<string, bool>? includeFile = null)
+    public static DirectorySnapshot Take(string rootPath, Func<string, bool>? includeFile = null, Action<string>? warn = null)
     {
         if (!Directory.Exists(rootPath))
             throw new DirectoryNotFoundException(rootPath);
@@ -42,14 +42,17 @@ public static class DirectorySnapshotter
             }
             catch (UnauthorizedAccessException)
             {
+                warn?.Invoke($"skip dir (unauthorized): {dir}");
                 continue;
             }
             catch (DirectoryNotFoundException)
             {
+                warn?.Invoke($"skip dir (not found): {dir}");
                 continue;
             }
             catch (IOException)
             {
+                warn?.Invoke($"skip dir (io): {dir}");
                 continue;
             }
 
@@ -63,14 +66,17 @@ public static class DirectorySnapshotter
             }
             catch (UnauthorizedAccessException)
             {
+                warn?.Invoke($"skip files in dir (unauthorized): {dir}");
                 continue;
             }
             catch (DirectoryNotFoundException)
             {
+                warn?.Invoke($"skip files in dir (not found): {dir}");
                 continue;
             }
             catch (IOException)
             {
+                warn?.Invoke($"skip files in dir (io): {dir}");
                 continue;
             }
 
@@ -90,15 +96,15 @@ public static class DirectorySnapshotter
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Skip unreadable files.
+                    warn?.Invoke($"skip file (unauthorized): {file}");
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    // File disappeared during traversal.
+                    warn?.Invoke($"skip file (not found): {file}");
                 }
                 catch (IOException)
                 {
-                    // Skip locked/temporary files.
+                    warn?.Invoke($"skip file (io): {file}");
                 }
             }
         }
