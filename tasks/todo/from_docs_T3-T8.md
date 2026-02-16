@@ -15,8 +15,8 @@
 - [x] Не падать при запрете доступа к `MainModule`.
 
 ## T5. ProcessInspector: never-crash
-- [ ] Если PID умер или доступ запрещен, возвращать структуру с пустыми модулями.
-- [ ] Не допускать `Unhandled exception`.
+- [x] Если PID умер или доступ запрещен, возвращать структуру с пустыми модулями.
+- [x] Не допускать `Unhandled exception`.
 
 ## T6. Multiple roots: снапшоты и diff по каждому root
 - [ ] `snapshot_before_{i}.json`, `snapshot_after_{i}.json`, `snapshot_diff_{i}.json`.
