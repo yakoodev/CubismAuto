@@ -144,6 +144,17 @@ bool IncludeFile(string path)
     return true;
 }
 
+bool IsSamePath(string left, string right)
+{
+    var l = Path.GetFullPath(left).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    var r = Path.GetFullPath(right).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+    return string.Equals(l, r, StringComparison.OrdinalIgnoreCase);
+}
+
+bool IsCubismTempPath(string path)
+    => path.Contains("live2d", StringComparison.OrdinalIgnoreCase)
+       || path.Contains("cubism", StringComparison.OrdinalIgnoreCase);
+
 // snapshot roots: projectsRoot + some sensible defaults (AppData) + user extras
 var roots = new List<string>();
 roots.Add(projectsRoot);
@@ -178,9 +189,9 @@ for (int i = 0; i < roots.Count; i++)
     Console.WriteLine($"  [{i+1}/{roots.Count}] {root}");
 
     Func<string, bool> filter = IncludeFile;
-    if (string.Equals(root, Path.GetFullPath(temp), StringComparison.OrdinalIgnoreCase))
+    if (IsSamePath(root, temp))
     {
-        filter = p => IncludeFile(p) && (p.Contains("live2d", StringComparison.OrdinalIgnoreCase) || p.Contains("cubism", StringComparison.OrdinalIgnoreCase));
+        filter = p => IncludeFile(p) && IsCubismTempPath(p);
     }
 
     var snap = DirectorySnapshotter.Take(root, filter);
@@ -236,9 +247,9 @@ for (int i = 0; i < roots.Count; i++)
     Console.WriteLine($"  [{i+1}/{roots.Count}] {root}");
 
     Func<string, bool> filter = IncludeFile;
-    if (string.Equals(root, Path.GetFullPath(temp), StringComparison.OrdinalIgnoreCase))
+    if (IsSamePath(root, temp))
     {
-        filter = p => IncludeFile(p) && (p.Contains("live2d", StringComparison.OrdinalIgnoreCase) || p.Contains("cubism", StringComparison.OrdinalIgnoreCase));
+        filter = p => IncludeFile(p) && IsCubismTempPath(p);
     }
 
     var snap = DirectorySnapshotter.Take(root, filter);
